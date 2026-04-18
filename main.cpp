@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 #include <random>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -99,11 +100,7 @@ std::unordered_map<std::string, int> generateskills(const std::array<int, 6>& mo
 
 std::string formatModifier(int value)
 {
-    std::ostringstream out;
-    if (value >= 0)
-        out << '+';
-    out << value;
-    return out.str();
+    return (value >= 0 ? "+" : "") + std::to_string(value);
 }
 std::string generateName(std::mt19937_64& rng)
 {
@@ -156,15 +153,27 @@ std::string generateName(std::mt19937_64& rng)
     return names[dist(rng)];
 }
 
+std::string generateClass(std::mt19937_64& rng)
+{
+    static const std::array<std::string, 9> classes = {
+        "wizard", "rouge", "fighter", "bard", "barbarian",
+        "cleric", "druid", "sorcerer", "artificer"
+    };
+
+    std::uniform_int_distribution<size_t> dist(0, classes.size() - 1);
+    return classes[dist(rng)];
+}
+
 void printnewStatBlock(int level, std::mt19937_64& rng)
 {
     std::array<std::string, 6> stat_names = {"STR", "DEX", "CON", "INT", "WIS", "CHA"};
     auto name = generateName(rng);
+    auto characterClass = generateClass(rng);
     auto stats = generateSixRandomNumbers(rng);
     auto roll_modifiers = mapArrayToEquation(stats);
     auto skills = generateskills(roll_modifiers, level, rng);
     int health_points = 10 * level + level * roll_modifiers[2];
-    std::cout << "Level: " << level << " HP: " << health_points << "  Name: " << name << "\n";
+    std::cout << "Level: " << level << " HP: " << health_points << "  Name: " << name << "  Class: " << characterClass << "\n";
     const int columnWidth = 10;
     for (size_t i = 0; i < stat_names.size(); ++i)
         std::cout << std::setw(columnWidth) << std::right << stat_names[i];
