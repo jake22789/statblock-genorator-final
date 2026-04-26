@@ -10,3 +10,13 @@ the way that c++ handles random variables is poor. in order to create a random v
 by next checkpoint i plan to implement test for my current vertion and port my implementation into python
 
 i am not waiting on any other input to complete my project.
+
+
+checkpoint two----------------------------------------------------------------------------------------------------------
+
+had a bit of a curveball as my goals for this week are no longer requiered for the final instead i went through and examind all my code assesing if the project meets the size that is expected fot this project and what i could add if i need to in order to meet said requierments.
+i assesed that i am close to the final functionality however a few things could be nice to add to show more of my learning from this class. i want ti implement a linq iteration function assign the stat modifiers. 
+adding known spells if the class is a spell caster.
+useing auto more so i understand it better.
+
+as well as writing the report for the final and prepering a powerpoint presintation useing google slides. to fulfill all requierments of this final project.

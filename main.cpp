@@ -24,28 +24,12 @@ std::array<int, 6> generateSixRandomNumbers(std::mt19937_64& rng)
 std::array<int, 6> mapArrayToEquation(const std::array<int, 6>& input)
 {
     std::array<int, 6> output{};
-
-    for (size_t i = 0; i < input.size(); ++i)
-    {
-        output[i] = (input[i] - 10.0) / 2.0;
-    }
-
+    std::transform(input.begin(), input.end(), output.begin(),
+                   [](int x) { return (x - 10) / 2; });
     return output;
 }
 
-template <typename T, size_t N>
-void printArray(const std::array<T, N>& arr)
-{
-    for (size_t i = 0; i < arr.size(); ++i)
-    {
-        std::cout << arr[i];
-        if (i + 1 < arr.size())
-            std::cout << ' ';
-    }
-    std::cout << '\n';
-}
-
-std::unordered_map<std::string, int> generateskills(const std::array<int, 6>& modifiers, int level, std::mt19937_64& rng)
+std::unordered_map<std::string, int> generateskills(const std::array<int, 6>& modifiers, const int level, std::mt19937_64& rng)
 {
     int proficiency_bonus = 2 + (level - 1) / 4;
     std::unordered_map<std::string, int> skills;
@@ -78,7 +62,6 @@ std::unordered_map<std::string, int> generateskills(const std::array<int, 6>& mo
 
     skills["MagicAttack"] = modifiers[5] + proficiency_bonus;
 
-    // List of skills that can gain proficiency
     std::vector<std::string> skill_names = {
         "Athletics", "Acrobatics", "Sleight of Hand", "Stealth", "Cooking",
         "Arcana", "History", "Nature", "Religion", "Investigation",
@@ -86,10 +69,8 @@ std::unordered_map<std::string, int> generateskills(const std::array<int, 6>& mo
         "Performance", "Persuasion", "Deception", "Intimidation"
     };
 
-    // Shuffle the list
     std::shuffle(skill_names.begin(), skill_names.end(), rng);
 
-    // Add proficiency bonus to the first 5 skills
     for (size_t i = 0; i < 5 && i < skill_names.size(); ++i)
     {
         skills[skill_names[i]] += proficiency_bonus;
@@ -105,9 +86,9 @@ std::string formatModifier(int value)
 std::string generateName(std::mt19937_64& rng)
 {
     static std::vector<std::string> names = {  // AI was used to generate these names,
-        "Aragorn", "Legolas", "Gimli", "Frodo", "Gandalf",
-        "Eowyn", "Boromir", "Samwise", "Pippin", "Merry",
-        "Kaelith", "Tharion", "Elowen", "Bryndor", "Sylvara",
+    "Aragorn", "Legolas", "Gimli", "Frodo", "Gandalf",
+    "Eowyn", "Boromir", "Samwise", "Pippin", "Merry",
+    "Kaelith", "Tharion", "Elowen", "Bryndor", "Sylvara",
     "Draven", "Liora", "Fenric", "Mirella", "Cairos",
     "Vaelric", "Isolde", "Garrick", "Seraphine", "Torvan",
     "Eryndor", "Lyraeth", "Dareth", "Althaea", "Korrin",
@@ -156,7 +137,7 @@ std::string generateName(std::mt19937_64& rng)
 std::string generateClass(std::mt19937_64& rng)
 {
     static const std::array<std::string, 9> classes = {
-        "wizard", "rouge", "fighter", "bard", "barbarian",
+        "wizard", "rogue", "fighter", "bard", "barbarian",
         "cleric", "druid", "sorcerer", "artificer"
     };
 
@@ -164,27 +145,38 @@ std::string generateClass(std::mt19937_64& rng)
     return classes[dist(rng)];
 }
 
-void printnewStatBlock(int level, std::mt19937_64& rng)
+struct StatBlock
 {
-    std::array<std::string, 6> stat_names = {"STR", "DEX", "CON", "INT", "WIS", "CHA"};
-    auto name = generateName(rng);
-    auto characterClass = generateClass(rng);
-    auto stats = generateSixRandomNumbers(rng);
-    auto roll_modifiers = mapArrayToEquation(stats);
-    auto skills = generateskills(roll_modifiers, level, rng);
-    int health_points = 10 * level + level * roll_modifiers[2];
-    std::cout << "Level: " << level << " HP: " << health_points << "  Name: " << name << "  Class: " << characterClass << "\n";
+    std::string name;
+    std::string characterClass;
+    std::array<int, 6> stats;
+    std::array<int, 6> roll_modifiers;
+    std::unordered_map<std::string, int> skills;
+};
+
+void initStatBlock(StatBlock& block, int level, std::mt19937_64& rng)
+{
+    block.name = generateName(rng);
+    block.characterClass = generateClass(rng);
+    block.stats = generateSixRandomNumbers(rng);
+    block.roll_modifiers = mapArrayToEquation(block.stats);
+    block.skills = generateskills(block.roll_modifiers, level, rng);
+}
+
+void printStatBlock(const StatBlock& block, int level)
+{
+    int health_points = 10 * level + level * block.roll_modifiers[2];
+    std::cout << "Level: " << level << " HP: " << health_points << "  Name: " << block.name << "  Class: " << block.characterClass << "\n";
     const int columnWidth = 10;
+    std::array<std::string, 6> stat_names = {"STR", "DEX", "CON", "INT", "WIS", "CHA"};
     for (size_t i = 0; i < stat_names.size(); ++i)
         std::cout << std::setw(columnWidth) << std::right << stat_names[i];
     std::cout << '\n';
-
-    for (size_t i = 0; i < stats.size(); ++i)
-        std::cout << std::setw(columnWidth) << std::right << stats[i];
+    for (size_t i = 0; i < block.stats.size(); ++i)
+        std::cout << std::setw(columnWidth) << std::right << block.stats[i];
     std::cout << '\n';
-
-    for (size_t i = 0; i < roll_modifiers.size(); ++i)
-        std::cout << std::setw(columnWidth) << std::right << formatModifier(roll_modifiers[i]);
+    for (size_t i = 0; i < block.roll_modifiers.size(); ++i)
+        std::cout << std::setw(columnWidth) << std::right << formatModifier(block.roll_modifiers[i]);
     std::cout << "\n";
 
     std::vector<std::string> skillOrder = {
@@ -202,28 +194,53 @@ void printnewStatBlock(int level, std::mt19937_64& rng)
     {
         const std::string& leftName = skillOrder[row];
         std::cout << std::setw(nameWidth) << std::left << leftName
-                  << std::setw(valueWidth) << std::right << formatModifier(skills[leftName]);
+                  << std::setw(valueWidth) << std::right << formatModifier(block.skills.at(leftName));
 
         size_t rightIndex = row + half;
         if (rightIndex < skillOrder.size())
         {
             const std::string& rightName = skillOrder[rightIndex];
             std::cout << "  " << std::setw(nameWidth) << std::left << rightName
-                      << std::setw(valueWidth) << std::right << formatModifier(skills[rightName]);
+                      << std::setw(valueWidth) << std::right << formatModifier(block.skills.at(rightName));
         }
-
         std::cout << '\n';
-    }
+    }    
 }
 
 void generatestatblocks(int count, int level, std::mt19937_64& rng)
 {
     for (int i = 0; i < count; ++i)
     {
-        printnewStatBlock(level, rng);
+        StatBlock block;
+        initStatBlock(block, level, rng);
+        printStatBlock(block, level);
         if (i < count - 1) std::cout << "\n";
     }
 }
+
+void validateInputs(int count, int level, unsigned long long seed) {
+    if (seed == 0)
+    {
+        std::cerr << "Error: seed must be a non-zero value\n";
+        std::exit(1);
+    }
+    if (seed > std::numeric_limits<unsigned long long>::max())
+    {
+        std::cerr << "Error: seed must be a valid number\n";
+        std::exit(1);
+    }
+    if (count <= 0)
+    {
+        std::cerr << "Error: number_of_statblocks must be greater than 0\n";
+        std::exit(1);
+    }
+    if (level <= 0)
+    {
+        std::cerr << "Error: level must be greater than 0\n";
+        std::exit(1);
+    }
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -238,6 +255,7 @@ int main(int argc, char* argv[])
     unsigned long long seed = std::stoull(argv[3]);
 
     std::mt19937_64 rng(seed);
+    validateInputs(count, level,seed);
     generatestatblocks(count, level, rng);
 
     return 0;
